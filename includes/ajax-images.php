@@ -114,7 +114,7 @@ function get_image_details_callback()
         $image_tags = [];
         if ($tags) { foreach ($tags as $tag) { $image_tags[] = esc_html($tag->tag_name); } }
         $album_id = $image->album_id;
-        $album = $wpdb->get_row($wpdb->prepare("SELECT album_name FROM {$albums_table} WHERE id = %d", $album_id));
+        $album = $wpdb->get_row($wpdb->prepare("SELECT album_name, created_by FROM {$albums_table} WHERE id = %d", $album_id));
         $category = $album ? $album->album_name : '未分类';
         $album_name = $album ? $album->album_name : '未知相册';
         $file_data = json_decode($image->file_data, true);
@@ -129,6 +129,7 @@ function get_image_details_callback()
             'category' => esc_html($category),
             'album_name' => esc_html($album_name),
             'album_id' => esc_html($album_id),
+            'uploader_id' => esc_html($album->created_by), // 使用相册创建者ID作为图片上传者ID
             'tags' => $image_tags
         );
         $buttons = [];

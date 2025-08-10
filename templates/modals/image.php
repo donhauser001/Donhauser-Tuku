@@ -711,13 +711,22 @@
                         <?php if (is_user_logged_in()): ?>
                         // 检查当前用户是否是图片的上传者
                         const currentUserId = <?php echo get_current_user_id(); ?>;
+                        console.log('调试信息 - 当前用户ID:', currentUserId);
+                        console.log('调试信息 - 图片上传者ID:', imageData.uploader_id);
+                        console.log('调试信息 - 图片数据:', imageData);
+                        
                         if (imageData.uploader_id && currentUserId === parseInt(imageData.uploader_id)) {
+                            console.log('权限检查通过，显示"添加新的"按钮');
                             const associateFileButton = document.createElement('button');
                             associateFileButton.textContent = "添加新的";
                             associateFileButton.onclick = () => {
                                 document.getElementById('fileSelector').click(); // 打开文件选择窗口
                             };
                             fileButtonsContainer.appendChild(associateFileButton);
+                        } else {
+                            console.log('权限检查失败，不显示"添加新的"按钮');
+                            console.log('uploader_id存在:', !!imageData.uploader_id);
+                            console.log('用户ID匹配:', currentUserId === parseInt(imageData.uploader_id));
                         }
                         <?php endif; ?>
 
