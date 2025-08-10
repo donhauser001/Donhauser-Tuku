@@ -460,6 +460,7 @@
 <script>
     (function() {
         let albumId; // 定义 albumId 变量
+        const currentUserId = <?php echo get_current_user_id(); ?>; // 全局用户ID变量
 
         // 确认 image_id 存在
         if (imageId) {
@@ -515,7 +516,6 @@
                         }
                         
                         // 根据权限显示/隐藏管理按钮（仅限素材作者）
-                        const currentUserId = <?php echo get_current_user_id(); ?>;
                         if (imageData.uploader_id && currentUserId === parseInt(imageData.uploader_id)) {
                             // 显示所有管理按钮
                             document.getElementById('setCoverButton').style.display = 'block';
@@ -724,7 +724,6 @@
                         // 插入 "关联其他文件" 按钮（仅限图片上传者）
                         <?php if (is_user_logged_in()): ?>
                         // 检查当前用户是否是图片的上传者
-                        const currentUserId = <?php echo get_current_user_id(); ?>;
                         if (imageData.uploader_id && currentUserId === parseInt(imageData.uploader_id)) {
                             const associateFileButton = document.createElement('button');
                             associateFileButton.textContent = "添加新的";
@@ -751,7 +750,6 @@
 
         function setAsCover() {
             // 权限检查：只有素材作者才能设置封面
-            const currentUserId = <?php echo get_current_user_id(); ?>;
             if (!window.imageUploaderId || currentUserId !== parseInt(window.imageUploaderId)) {
                 alert('权限不足：只有素材作者才能设置封面');
                 return;
@@ -1138,7 +1136,6 @@
         // 监听文件选择器的变化（仅限图片上传者）
         <?php if (is_user_logged_in()): ?>
         // 检查当前用户是否是图片的上传者
-        const currentUserId = <?php echo get_current_user_id(); ?>;
         const imageUploaderId = window.imageUploaderId; // 从全局变量获取图片上传者ID
         
         if (imageUploaderId && currentUserId === parseInt(imageUploaderId)) {
@@ -1273,7 +1270,6 @@
         <?php if (is_user_logged_in()): ?>
         document.getElementById('deleteButton').addEventListener('click', function() {
             // 权限检查：只有素材作者才能删除素材
-            const currentUserId = <?php echo get_current_user_id(); ?>;
             if (!window.imageUploaderId || currentUserId !== parseInt(window.imageUploaderId)) {
                 alert('权限不足：只有素材作者才能删除素材');
                 return;
@@ -1340,7 +1336,6 @@
         <?php if (is_user_logged_in()): ?>
         document.getElementById('uploadPreview').addEventListener('change', function(event) {
             // 权限检查：只有素材作者才能更新预览图
-            const currentUserId = <?php echo get_current_user_id(); ?>;
             if (!window.imageUploaderId || currentUserId !== parseInt(window.imageUploaderId)) {
                 alert('权限不足：只有素材作者才能更新预览图');
                 event.target.value = ''; // 清空文件选择
