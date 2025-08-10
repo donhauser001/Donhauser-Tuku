@@ -230,7 +230,7 @@
                 <label style="display: block;">
                     <input type="radio" name="batch_tag_method" value="ai" style="margin-right: 8px;">
                     <span style="color: #e60023;">🤖 AI智能标签</span>
-                    <small style="display: block; margin-left: 20px; color: #666;">使用AI图像识别技术生成标签（需要网络连接）</small>
+                    <small style="display: block; margin-left: 20px; color: #666;">使用AI图像识别技术生成标签</small>
                 </label>
             </div>
         </div>

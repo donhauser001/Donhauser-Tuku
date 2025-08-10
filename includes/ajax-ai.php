@@ -91,7 +91,7 @@ function batch_generate_auto_tags_callback()
         wp_send_json_success(['message' => '没有更多图片需要处理','processed' => 0,'has_more' => false]);
         return;
     }
-    $processed_count = 0; $total_tags = 0; $errors = [];
+    $processed_count = 0; $total_tags = 0; $errors = []; $processed_files = [];
     $auto_tagger = DHS_Tuku_Auto_Tagger::get_instance();
     foreach ($images as $image) {
         try {
@@ -103,11 +103,49 @@ function batch_generate_auto_tags_callback()
             $auto_tags = $auto_tagger->generate_auto_tags($actual_path, $image->name, $album_name);
             if (!empty($auto_tags)) {
                 $success = $auto_tagger->save_auto_tags($image->id, $auto_tags, true);
-                if ($success) { $total_tags += count($auto_tags); $processed_count++; }
-                else { $errors[] = "标签保存失败: {$image->name}"; }
-            } else { $processed_count++; }
+                if ($success) { 
+                    $tag_count = count($auto_tags);
+                    $total_tags += $tag_count; 
+                    $processed_count++; 
+                    // 记录已处理的文件信息
+                    $processed_files[] = [
+                        'id' => $image->id,
+                        'name' => $image->name,
+                        'album_name' => $album_name ?: 'Unknown',
+                        'tags_generated' => $tag_count
+                    ];
+                }
+                else { 
+                    $errors[] = "标签保存失败: {$image->name}"; 
+                    // 即使保存失败也记录文件信息
+                    $processed_files[] = [
+                        'id' => $image->id,
+                        'name' => $image->name,
+                        'album_name' => $album_name ?: 'Unknown',
+                        'tags_generated' => 0,
+                        'error' => '标签保存失败'
+                    ];
+                }
+            } else { 
+                $processed_count++; 
+                $processed_files[] = [
+                    'id' => $image->id,
+                    'name' => $image->name,
+                    'album_name' => $album_name ?: 'Unknown',
+                    'tags_generated' => 0
+                ];
+            }
         } catch (Exception $e) {
             $errors[] = "处理失败: {$image->name} - " . $e->getMessage();
+            
+            // 记录出错的文件信息
+            $processed_files[] = [
+                'id' => $image->id,
+                'name' => $image->name,
+                'album_name' => $album_name ?: 'Unknown',
+                'tags_generated' => 0,
+                'error' => $e->getMessage()
+            ];
         }
     }
     $total_images = $album_id > 0
@@ -120,7 +158,8 @@ function batch_generate_auto_tags_callback()
         'total_tags' => $total_tags,
         'errors' => $errors,
         'has_more' => $has_more,
-        'next_offset' => $offset + $limit
+        'next_offset' => $offset + $limit,
+        'processed_files' => $processed_files // 添加已处理的文件信息
     ]);
 }
 
@@ -278,7 +317,7 @@ function batch_generate_ai_tags_callback()
         } else {
             $images = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}dhs_gallery_images ORDER BY id LIMIT %d OFFSET %d", $limit, $offset));
         }
-        $processed_count = 0; $total_tags_generated = 0; $errors = []; $fallback_count = 0;
+        $processed_count = 0; $total_tags_generated = 0; $errors = []; $fallback_count = 0; $processed_files = [];
         foreach ($images as $image) {
             try {
                 $album = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}dhs_gallery_albums WHERE id = %d", $image->album_id));
@@ -306,8 +345,25 @@ function batch_generate_ai_tags_callback()
                 }
                 $total_tags_generated += $saved_count;
                 $processed_count++;
+                
+                // 记录已处理的文件信息
+                $processed_files[] = [
+                    'id' => $image->id,
+                    'name' => $image->name,
+                    'album_name' => $album ? $album->album_name : 'Unknown',
+                    'tags_generated' => $saved_count
+                ];
             } catch (Exception $e) {
                 $errors[] = "图片 {$image->name}: " . $e->getMessage();
+                
+                // 即使出错也记录文件信息
+                $processed_files[] = [
+                    'id' => $image->id,
+                    'name' => $image->name,
+                    'album_name' => $album ? $album->album_name : 'Unknown',
+                    'tags_generated' => 0,
+                    'error' => $e->getMessage()
+                ];
             }
         }
         $next_offset = $offset + $limit;
@@ -323,9 +379,43 @@ function batch_generate_ai_tags_callback()
             'next_offset' => $next_offset,
             'total_count' => $total_count,
             'fallback_count' => $fallback_count,
-            'ai_available' => $ai_service_available
+            'ai_available' => $ai_service_available,
+            'processed_files' => $processed_files // 添加已处理的文件信息
         ]);
     } catch (Exception $e) {
         wp_send_json_error(['message' => '批量AI标签生成失败: ' . $e->getMessage()]);
     }
 }
+
+/**
+ * 获取图片总数
+ */
+function get_images_count_callback() {
+    // 验证nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'dhs_nonce')) {
+        wp_send_json_error(['message' => '安全验证失败']);
+        return;
+    }
+
+    // 权限检查
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => '权限不足']);
+        return;
+    }
+
+    try {
+        global $wpdb;
+        
+        // 获取所有图片总数
+        $total_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}dhs_gallery_images");
+        
+        wp_send_json_success([
+            'total' => (int)$total_count
+        ]);
+    } catch (Exception $e) {
+        wp_send_json_error(['message' => '获取图片数量失败: ' . $e->getMessage()]);
+    }
+}
+
+// 注册AJAX钩子
+add_action('wp_ajax_dhs_get_images_count', 'get_images_count_callback');

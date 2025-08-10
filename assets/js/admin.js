@@ -430,4 +430,9 @@
     // 导出到全局作用域
     window.DHS_Tuku_Admin = DHS_Tuku_Admin;
 
+    // 为兼容性添加全局 showNotice 函数
+    window.showNotice = function (message, type) {
+        DHS_Tuku_Admin.showNotice(message, type);
+    };
+
 })(jQuery);

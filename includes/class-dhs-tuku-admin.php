@@ -15,6 +15,7 @@ class DHS_Tuku_Admin
         // AJAX: 测试 AI 连接
         add_action('wp_ajax_dhs_test_ai_connection', [__CLASS__, 'ajax_test_ai_connection']);
         add_action('wp_ajax_dhs_batch_generate_ai_tags', [__CLASS__, 'ajax_stub_batch_ai']);
+        add_action('wp_ajax_dhs_batch_generate_auto_tags', [__CLASS__, 'ajax_stub_batch_auto']);
     }
 
     /**
@@ -89,15 +90,51 @@ class DHS_Tuku_Admin
     }
 
     /**
-     * 占位：批量生成触发入口（仅提示在前台使用）
+     * AI标签生成处理入口（重定向到前台处理函数）
      */
     public static function ajax_stub_batch_ai()
     {
-        check_ajax_referer('dhs_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('权限不足');
+        // 验证nonce和权限后，重定向到前台的成功实现
+        if (!wp_verify_nonce($_POST['nonce'], 'dhs_nonce')) {
+            wp_send_json_error(['message' => '安全验证失败']);
+            return;
         }
-        wp_send_json_error('请在前台相册页面执行批量生成。');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => '权限不足']);
+            return;
+        }
+        
+        // 重新设置参数以匹配前台实现的期望
+        $_POST['_ajax_nonce'] = $_POST['nonce'];
+        $_POST['album_id'] = 0; // 0表示处理所有图片，不限于特定相册
+        
+        // 调用前台的成功实现
+        batch_generate_ai_tags_callback();
+    }
+
+    /**
+     * 自动标签生成处理入口（重定向到前台处理函数）
+     */
+    public static function ajax_stub_batch_auto()
+    {
+        // 验证nonce和权限后，重定向到前台的成功实现
+        if (!wp_verify_nonce($_POST['nonce'], 'dhs_nonce')) {
+            wp_send_json_error(['message' => '安全验证失败']);
+            return;
+        }
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => '权限不足']);
+            return;
+        }
+        
+        // 重新设置参数以匹配前台实现的期望
+        $_POST['_ajax_nonce'] = $_POST['nonce'];
+        $_POST['album_id'] = 0; // 0表示处理所有图片，不限于特定相册
+        
+        // 调用前台的成功实现
+        batch_generate_auto_tags_callback();
     }
 
     /**
@@ -710,8 +747,15 @@ class DHS_Tuku_Admin
             self::handle_tag_actions();
         }
 
-        // 获取所有标签
-        $tags = self::get_all_tags();
+        // 获取标签数据（包含分页信息）
+        $tags_data = self::get_all_tags();
+        $tags = $tags_data['items'];
+        $pagination = [
+            'total_items' => $tags_data['total_items'],
+            'total_pages' => $tags_data['total_pages'],
+            'current_page' => $tags_data['current_page'],
+            'per_page' => $tags_data['per_page']
+        ];
 
     ?>
         <div class="wrap tag-manager-admin-container">
@@ -720,7 +764,6 @@ class DHS_Tuku_Admin
             <!-- 自动标签功能（只读摘要 + 操作按钮） -->
             <div class="card">
                 <h2><?php _e('AI自动标签生成', 'dhs-tuku'); ?></h2>
-                <p><?php _e('当前配置摘要（只读）。如需修改，请前往“DHS图库 → 设置”。', 'dhs-tuku'); ?></p>
 
                 <?php
                     $ai_enabled = (int) get_option('dhs_enable_ai_tags', 1);
@@ -778,8 +821,9 @@ class DHS_Tuku_Admin
                     <button type="button" class="button button-primary" onclick="testAIConnection()">
                         <i class="fas fa-test-tube"></i> 测试AI连接
                     </button>
-                    <button type="button" class="button button-secondary" onclick="batchGenerateAITags()">
-                        <i class="fas fa-layer-group"></i> 批量生成标签
+                    <button type="button" class="dhs-btn dhs-btn-secondary" onclick="showBatchTagsModal()" style="display: flex; align-items: center; gap: 8px;">
+                        <span class="dashicons dashicons-update" style="font-family: dashicons !important; font-size: 16px; line-height: 1; width: 16px; height: 16px; display: inline-block;"></span>
+                        <?php _e('批量生成标签', 'dhs-tuku'); ?>
                     </button>
                 </div>
             </div>
@@ -791,20 +835,69 @@ class DHS_Tuku_Admin
                 <h2><?php _e('标签列表', 'dhs-tuku'); ?></h2>
                 
                 <!-- 清空所有标签按钮 -->
-                <div class="clear-all-tags-section" style="margin-bottom: 20px; padding: 15px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
-                    <h3 style="margin-top: 0; color: #856404;"><?php _e('批量操作', 'dhs-tuku'); ?></h3>
-                    <p style="margin-bottom: 15px; color: #856404;"><?php _e('警告：清空所有标签将删除所有标签和图片标签关联，此操作不可逆！', 'dhs-tuku'); ?></p>
+                <div class="clear-all-tags-section" >
                     <button type="button" class="button button-primary" style="background-color: #dc3545; border-color: #dc3545;" onclick="clearAllTags()">
                         <i class="fas fa-trash-alt"></i> <?php _e('清空所有标签', 'dhs-tuku'); ?>
-                    </button>
+                    </button>  <p style="margin-bottom: 15px; color: #856404;"><?php _e('警告：清空所有标签将删除所有标签和图片标签关联，此操作不可逆！', 'dhs-tuku'); ?></p>
+
                 </div>
                 
                 <?php if (!empty($tags)): ?>
+                    <!-- 表格顶部分页导航 -->
+                    <div class="tablenav top">
+                        <div class="alignleft actions">
+                            <span class="displaying-num">
+                                <?php printf(__('共 %s 个标签', 'dhs-tuku'), $pagination['total_items']); ?>
+                            </span>
+                        </div>
+                        <?php if ($pagination['total_pages'] > 1): ?>
+                            <div class="tablenav-pages">
+                                <?php
+                                $page_links = paginate_links([
+                                    'base' => add_query_arg('paged', '%#%'),
+                                    'format' => '',
+                                    'current' => $pagination['current_page'],
+                                    'total' => $pagination['total_pages'],
+                                    'prev_text' => '&laquo;',
+                                    'next_text' => '&raquo;',
+                                    'type' => 'plain'
+                                ]);
+                                echo $page_links;
+                                ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- 标签列表表格 -->
                     <table class="wp-list-table widefat fixed striped">
                         <thead>
                             <tr>
-                                <th><?php _e('标签名称', 'dhs-tuku'); ?></th>
-                                <th><?php _e('使用次数', 'dhs-tuku'); ?></th>
+                                <?php
+                                $current_orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'tag_name';
+                                $current_order = isset($_GET['order']) ? $_GET['order'] : 'asc';
+                                
+                                // 标签名称排序链接
+                                $tag_name_order = ($current_orderby === 'tag_name' && $current_order === 'asc') ? 'desc' : 'asc';
+                                $tag_name_url = add_query_arg(['orderby' => 'tag_name', 'order' => $tag_name_order]);
+                                $tag_name_class = $current_orderby === 'tag_name' ? 'sorted ' . $current_order : 'sortable';
+                                
+                                // 使用次数排序链接
+                                $usage_order = ($current_orderby === 'usage_count' && $current_order === 'asc') ? 'desc' : 'asc';
+                                $usage_url = add_query_arg(['orderby' => 'usage_count', 'order' => $usage_order]);
+                                $usage_class = $current_orderby === 'usage_count' ? 'sorted ' . $current_order : 'sortable';
+                                ?>
+                                <th class="<?php echo esc_attr($tag_name_class); ?>">
+                                    <a href="<?php echo esc_url($tag_name_url); ?>">
+                                        <?php _e('标签名称', 'dhs-tuku'); ?>
+                                        <span class="sorting-indicator"></span>
+                                    </a>
+                                </th>
+                                <th class="<?php echo esc_attr($usage_class); ?>">
+                                    <a href="<?php echo esc_url($usage_url); ?>">
+                                        <?php _e('使用次数', 'dhs-tuku'); ?>
+                                        <span class="sorting-indicator"></span>
+                                    </a>
+                                </th>
                                 <th><?php _e('操作', 'dhs-tuku'); ?></th>
                             </tr>
                         </thead>
@@ -831,6 +924,31 @@ class DHS_Tuku_Admin
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+
+                    <!-- 表格底部分页导航 -->
+                    <?php if ($pagination['total_pages'] > 1): ?>
+                        <div class="tablenav bottom">
+                            <div class="alignleft actions">
+                                <span class="displaying-num">
+                                    <?php printf(__('共 %s 个标签', 'dhs-tuku'), $pagination['total_items']); ?>
+                                </span>
+                            </div>
+                            <div class="tablenav-pages">
+                                <?php
+                                $page_links = paginate_links([
+                                    'base' => add_query_arg('paged', '%#%'),
+                                    'format' => '',
+                                    'current' => $pagination['current_page'],
+                                    'total' => $pagination['total_pages'],
+                                    'prev_text' => '&laquo;',
+                                    'next_text' => '&raquo;',
+                                    'type' => 'plain'
+                                ]);
+                                echo $page_links;
+                                ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 <?php else: ?>
                     <p><?php _e('暂无标签', 'dhs-tuku'); ?></p>
                 <?php endif; ?>
@@ -958,10 +1076,41 @@ class DHS_Tuku_Admin
                         }
                     });
                 });
+                
+
             </script>
             
             <!-- 清空所有标签的JavaScript函数 -->
             <script>
+            // showNotice 函数定义
+            function showNotice(message, type) {
+                var noticeClass = 'notice ';
+                switch(type) {
+                    case 'success':
+                        noticeClass += 'notice-success';
+                        break;
+                    case 'error':
+                        noticeClass += 'notice-error';
+                        break;
+                    case 'warning':
+                        noticeClass += 'notice-warning';
+                        break;
+                    case 'info':
+                    default:
+                        noticeClass += 'notice-info';
+                        break;
+                }
+                
+                var notice = jQuery('<div class="' + noticeClass + ' is-dismissible"><p>' + message + '</p></div>');
+                jQuery('.wrap').prepend(notice);
+                
+                setTimeout(function() {
+                    notice.fadeOut(function() {
+                        notice.remove();
+                    });
+                }, 5000);
+            }
+            
             function clearAllTags() {
                 if (confirm('确定要清空所有标签吗？此操作将删除所有标签和图片标签关联，不可逆！')) {
                     // 显示加载状态
@@ -1030,37 +1179,297 @@ class DHS_Tuku_Admin
 
             // 已移除单张生成按钮
 
-            function batchGenerateAITags() {
-                if (confirm('确定要批量生成AI标签吗？这将为所有未标记的图片生成标签。')) {
-                    const button = event.target;
-                    const originalText = button.innerHTML;
-                    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 生成中...';
-                    button.disabled = true;
+            // 全局变量用于跟踪处理状态
+            let currentBatchState = {
+                totalImages: 0,
+                processedCount: 0,
+                isRunning: false,
+                selectedMethod: 'auto'
+            };
 
+            // 显示批量标签生成方式选择模态窗
+            function showBatchTagsModal() {
+                const modal = document.createElement('div');
+                modal.id = 'batch-tags-modal';
+                modal.className = 'ai-progress-modal';
+                modal.innerHTML = `
+                    <div class="ai-progress-content" style="max-width: 500px;">
+                        <h3>选择标签生成方式</h3>
+                        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 8px; cursor: pointer;">
+                                    <input type="radio" name="batch_tag_method" value="auto" checked style="margin-right: 8px;">
+                                    <span style="color: #667eea;">🔧 自动生成标签</span>
+                                    <small style="display: block; margin-left: 20px; color: #666;">基于文件名和相册信息生成标签（快速）</small>
+                                </label>
+                                <label style="display: block; cursor: pointer;">
+                                    <input type="radio" name="batch_tag_method" value="ai" style="margin-right: 8px;">
+                                    <span style="color: #e60023;">🤖 AI智能标签</span>
+                                    <small style="display: block; margin-left: 20px; color: #666;">使用AI图像识别技术生成标签</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button type="button" class="button" onclick="closeBatchTagsModal()">取消</button>
+                            <button type="button" class="button button-primary" onclick="startBatchGeneration()">开始生成</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            function closeBatchTagsModal() {
+                const modal = document.getElementById('batch-tags-modal');
+                if (modal) {
+                    modal.remove();
+                }
+            }
+
+            function startBatchGeneration() {
+                const selectedMethod = document.querySelector('input[name="batch_tag_method"]:checked')?.value || 'auto';
+                currentBatchState.selectedMethod = selectedMethod;
+                
+                closeBatchTagsModal();
+                
+                if (confirm('确定要批量生成标签吗？这将为所有图片生成' + (selectedMethod === 'ai' ? 'AI智能' : '自动') + '标签。')) {
+                    batchGenerateAITags();
+                }
+            }
+
+            function batchGenerateAITags() {
+                // 创建进度显示模态框
+                createProgressModal();
+                
+                // 首先获取需要处理的图片总数
+                jQuery.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'dhs_get_images_count',
+                        nonce: '<?php echo wp_create_nonce('dhs_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            currentBatchState.totalImages = response.data.total;
+                            currentBatchState.processedCount = 0;
+                            currentBatchState.isRunning = true;
+                            
+                            if (currentBatchState.totalImages === 0) {
+                                closeProgressModal();
+                                showNotice('没有找到需要生成标签的图片', 'info');
+                                return;
+                            }
+                            
+                            const methodName = currentBatchState.selectedMethod === 'ai' ? 'AI智能标签' : '自动标签';
+                            updateProgress(0, currentBatchState.totalImages, `开始生成${methodName}...`);
+                            startBatchProcessing(currentBatchState.totalImages);
+                        } else {
+                            closeProgressModal();
+                            showNotice('获取图片信息失败：' + (response.data || '未知错误'), 'error');
+                        }
+                    },
+                    error: function() {
+                        closeProgressModal();
+                        showNotice('网络错误，请重试', 'error');
+                    }
+                });
+            }
+
+            function startBatchProcessing(totalImages) {
+                const batchSize = 5; // 每批处理5张图片
+                
+                function processBatch(offset) {
+                    // 根据选择的方法调用不同的action
+                    const action = currentBatchState.selectedMethod === 'ai' ? 'dhs_batch_generate_ai_tags' : 'dhs_batch_generate_auto_tags';
+                    
                     jQuery.ajax({
                         url: ajaxurl,
                         type: 'POST',
                         data: {
-                            action: 'dhs_batch_generate_ai_tags',
+                            action: action,
+                            offset: offset,
+                            limit: batchSize,
                             nonce: '<?php echo wp_create_nonce('dhs_nonce'); ?>'
                         },
                         success: function(response) {
                             if (response.success) {
-                                alert('批量AI标签生成完成！');
+                                currentBatchState.processedCount += response.data.processed;
+                                const percentage = Math.round((currentBatchState.processedCount / currentBatchState.totalImages) * 100);
+                                
+                                // 获取最后处理的文件名用于显示
+                                let lastFile = null;
+                                if (response.data.processed_files && response.data.processed_files.length > 0) {
+                                    const lastProcessed = response.data.processed_files[response.data.processed_files.length - 1];
+                                    lastFile = `${lastProcessed.name} (${lastProcessed.album_name})`;
+                                }
+                                
+                                updateProgress(currentBatchState.processedCount, currentBatchState.totalImages, 
+                                    `已处理 ${currentBatchState.processedCount}/${currentBatchState.totalImages} 张图片 (${percentage}%)`, lastFile);
+                                
+                                // 更新后台处理状态
+                                if (backgroundProcessingState.isRunning) {
+                                    backgroundProcessingState.processedCount = currentBatchState.processedCount;
+                                    localStorage.setItem('dhsBackgroundProcessing', JSON.stringify(backgroundProcessingState));
+                                }
+                                
+                                if (currentBatchState.processedCount < currentBatchState.totalImages) {
+                                    // 继续处理下一批
+                                    setTimeout(() => processBatch(offset + batchSize), 500);
+                                } else {
+                                    // 处理完成
+                                    currentBatchState.isRunning = false;
+                                    setTimeout(() => {
+                                        closeProgressModal();
+                                        clearBackgroundProcessing(); // 清除后台处理状态
+                                        showNotice(`批量AI标签生成完成！共处理 ${currentBatchState.processedCount} 张图片`, 'success');
+                                        // 刷新页面显示新生成的标签
+                                        location.reload();
+                                    }, 1000);
+                                }
                             } else {
-                                alert('批量AI标签生成失败：' + (response.data || '未知错误'));
+                                currentBatchState.isRunning = false;
+                                closeProgressModal();
+                                clearBackgroundProcessing(); // 清除后台处理状态
+                                showNotice('批量处理失败：' + (response.data || '未知错误'), 'error');
                             }
-                            button.innerHTML = originalText;
-                            button.disabled = false;
                         },
                         error: function() {
-                            alert('网络错误，请重试');
-                            button.innerHTML = originalText;
-                            button.disabled = false;
+                            currentBatchState.isRunning = false;
+                            closeProgressModal();
+                            clearBackgroundProcessing();
+                            showNotice('网络错误，批量处理中断', 'error');
                         }
                     });
                 }
+                
+                // 开始第一批处理
+                processBatch(0);
             }
+
+            function createProgressModal() {
+                const modal = document.createElement('div');
+                modal.id = 'ai-progress-modal';
+                modal.className = 'ai-progress-modal';
+                const methodName = currentBatchState.selectedMethod === 'ai' ? 'AI智能标签' : '自动标签';
+                modal.innerHTML = `
+                    <div class="ai-progress-content">
+                        <h3>${methodName}生成进度</h3>
+                        <div class="current-file" id="current-file" style="margin: 10px 0; font-size: 13px; color: #666; font-weight: 500;"></div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progress-bar"></div>
+                        </div>
+                        <div class="progress-text" id="progress-text" style="margin-top: 8px;">正在初始化...</div>
+                        <div class="progress-actions" style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button type="button" class="button" onclick="cancelBatchProcessing()">取消</button>
+                            <button type="button" class="button button-primary" onclick="moveToBackground()" id="background-btn">后台处理</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            function updateProgress(current, total, message, currentFile = null) {
+                const percentage = total > 0 ? (current / total) * 100 : 0;
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+                const currentFileDiv = document.getElementById('current-file');
+                
+                if (progressBar) {
+                    progressBar.style.width = percentage + '%';
+                }
+                if (progressText) {
+                    progressText.textContent = message;
+                }
+                if (currentFileDiv) {
+                    if (currentFile) {
+                        currentFileDiv.innerHTML = `<span style="color: #444;">当前处理：</span><span style="color: #e60023;">${currentFile}</span>`;
+                        currentFileDiv.style.display = 'block';
+                    } else {
+                        currentFileDiv.style.display = 'none';
+                    }
+                }
+            }
+
+            function closeProgressModal() {
+                const modal = document.getElementById('ai-progress-modal');
+                if (modal) {
+                    modal.remove();
+                }
+            }
+
+            function cancelBatchProcessing() {
+                if (confirm('确定要取消批量处理吗？')) {
+                    closeProgressModal();
+                    clearBackgroundProcessing();
+                }
+            }
+            
+            // 后台处理相关功能
+            let backgroundProcessingState = {
+                isRunning: false,
+                totalImages: 0,
+                processedCount: 0,
+                currentOffset: 0
+            };
+            
+            function moveToBackground() {
+                if (confirm('确定要将处理移至后台吗？您可以继续使用其他功能，处理将在后台继续进行。')) {
+                    backgroundProcessingState.isRunning = true;
+                    backgroundProcessingState.totalImages = currentBatchState.totalImages;
+                    backgroundProcessingState.processedCount = currentBatchState.processedCount;
+                    backgroundProcessingState.currentOffset = Math.floor(currentBatchState.processedCount / 5) * 5; // 根据当前进度计算offset
+                    
+                    closeProgressModal();
+                    showBackgroundProcessingIndicator();
+                    
+                    // 在localStorage中保存状态
+                    localStorage.setItem('dhsBackgroundProcessing', JSON.stringify(backgroundProcessingState));
+                }
+            }
+            
+            function showBackgroundProcessingIndicator() {
+                // 在页面标题后添加进度指示器
+                const titleElement = document.querySelector('.wrap h1');
+                if (titleElement && !document.getElementById('background-indicator')) {
+                    const indicator = document.createElement('span');
+                    indicator.id = 'background-indicator';
+                    indicator.innerHTML = ` <span style="color: #e60023; font-size: 14px;">(AI标签生成中... <a href="#" onclick="showBackgroundProgress()" style="color: #e60023;">查看进度</a>)</span>`;
+                    titleElement.appendChild(indicator);
+                }
+            }
+            
+            function clearBackgroundProcessing() {
+                backgroundProcessingState.isRunning = false;
+                localStorage.removeItem('dhsBackgroundProcessing');
+                
+                const indicator = document.getElementById('background-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+            
+            function showBackgroundProgress() {
+                if (backgroundProcessingState.isRunning) {
+                    createProgressModal();
+                    updateProgress(backgroundProcessingState.processedCount, backgroundProcessingState.totalImages, 
+                        `已处理 ${backgroundProcessingState.processedCount}/${backgroundProcessingState.totalImages} 张图片`);
+                }
+            }
+            
+            // 页面加载时检查是否有后台处理
+            jQuery(document).ready(function($) {
+                const savedState = localStorage.getItem('dhsBackgroundProcessing');
+                if (savedState) {
+                    try {
+                        backgroundProcessingState = JSON.parse(savedState);
+                        if (backgroundProcessingState.isRunning) {
+                            showBackgroundProcessingIndicator();
+                        }
+                    } catch (e) {
+                        localStorage.removeItem('dhsBackgroundProcessing');
+                    }
+                }
+            });
             </script>
         </div>
 
@@ -1237,7 +1646,7 @@ class DHS_Tuku_Admin
     }
 
     /**
-     * 获取所有标签
+     * 获取标签列表（带分页和排序）
      */
     private static function get_all_tags()
     {
@@ -1245,15 +1654,47 @@ class DHS_Tuku_Admin
         $tags_table = $wpdb->prefix . 'dhs_gallery_tags';
         $image_tag_table = $wpdb->prefix . 'dhs_gallery_image_tag';
 
+        // 获取分页参数
+        $page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+        $per_page = 20; // 每页显示20个标签
+        $offset = ($page - 1) * $per_page;
+
+        // 获取排序参数
+        $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'tag_name';
+        $order = isset($_GET['order']) && $_GET['order'] === 'desc' ? 'DESC' : 'ASC';
+
+        // 验证排序字段
+        $allowed_orderby = ['tag_name', 'usage_count'];
+        if (!in_array($orderby, $allowed_orderby)) {
+            $orderby = 'tag_name';
+        }
+
+        // 构建查询
         $query = "
             SELECT t.id as tag_id, t.tag_name, COUNT(it.image_id) as usage_count
             FROM {$tags_table} t
             LEFT JOIN {$image_tag_table} it ON t.id = it.tag_id
             GROUP BY t.id, t.tag_name
-            ORDER BY t.tag_name ASC
+            ORDER BY {$orderby} {$order}
+            LIMIT {$per_page} OFFSET {$offset}
         ";
 
-        return $wpdb->get_results($query);
+        $results = $wpdb->get_results($query);
+
+        // 获取总数
+        $count_query = "
+            SELECT COUNT(DISTINCT t.id) as total
+            FROM {$tags_table} t
+        ";
+        $total_items = $wpdb->get_var($count_query);
+
+        return [
+            'items' => $results,
+            'total_items' => $total_items,
+            'total_pages' => ceil($total_items / $per_page),
+            'current_page' => $page,
+            'per_page' => $per_page
+        ];
     }
 
     /**
