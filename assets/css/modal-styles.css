@@ -1,0 +1,1015 @@
+.dhs-tuku-custom-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 背景遮罩 */
+    overflow-y: auto;
+    /* 允许整个页面在模态窗口打开时滚动 */
+}
+
+.dhs-tuku-custom-modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 10px;
+    position: relative;
+    overflow-y: auto;
+}
+
+.dhs-tuku-close-modal {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.dhs-tuku-close-modal:hover,
+.dhs-tuku-close-modal:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+h5 {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* 文件设置区域 */
+.file-settings {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.file-settings label {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+/* 自定义多选下拉菜单 */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 7px;
+    cursor: pointer;
+    background-color: #f9f9f9;
+    position: relative;
+}
+
+#newCategoryBtn {
+    margin-left: 24px;
+}
+
+.custom-select span {
+    display: block;
+    font-size: 14px;
+}
+
+.custom-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 10;
+}
+
+.custom-options input[type="checkbox"] {
+    width: auto;
+}
+
+.custom-options label {
+    display: block;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+
+.custom-options input {
+    margin-right: 10px;
+}
+
+.custom-options label:hover {
+    background-color: #f1f1f1;
+}
+
+
+#albumSelect,
+#categorySelect,
+#newAlbumName,
+#AlbumName,
+#newCategoryName,
+#parentCategorySelect,
+#newAlbumDescription {
+    padding: 5px;
+    font-size: 14px;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+
+
+.new-album-container {
+    margin-top: 10px;
+}
+
+/* 相册名称和分类布局 */
+.album-name-category,
+.category-name-parent {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.album-name,
+.album-category,
+.category-name,
+.category-parent {
+    flex: 1;
+}
+
+.album-description {
+    margin-top: 15px;
+}
+
+/* 分类描述文本框样式 */
+#newAlbumDescription {
+    width: 100%;
+    font-size: 14px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    resize: none;
+}
+
+.new-album-container input {
+    padding: 5px;
+    font-size: 14px;
+    width: 200px;
+}
+
+.drop-zone {
+    width: 100%;
+    padding: 30px;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.drop-zone:hover {
+    border-color: #888;
+}
+
+.drop-zone.active {
+    border-color: #4f5564;
+    background-color: #f6f6f6;
+}
+
+.drop-zone p {
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+}
+
+.file-list {
+    margin-top: 20px;
+}
+
+
+.file-list-item {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.file-info {
+    display: block;
+    margin-bottom: 10px;
+    /* 文件项之间的间距 */
+}
+
+.file-item {
+    display: block;
+    /* 将每个文件条目作为独立的块级元素 */
+    padding: 5px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.file-item p {
+    margin-bottom: 0;
+    font-size: 12px;
+}
+
+.file-info span {
+    display: inline-block;
+}
+
+.delete-btn {
+    background-color: #e74c3c;
+    font-size: 0.8em;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    align-self: flex-end;
+    /* 将删除按钮与文件信息保持同一行 */
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+}
+
+.progress-bar-up-container {
+    background-color: #f3f3f3;
+    border-radius: 5px;
+    width: 100%;
+    height: 3px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.progress-bar-up {
+    background-color: #4caf50;
+    width: 0%;
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.3s ease;
+}
+
+.button-container {
+    margin-top: 20px;
+}
+
+.button-container button {
+    font-size: 14px;
+    margin-right: 10px;
+    padding: 10px 15px;
+    background-color: #fff;
+    color: #4f5564;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s;
+    border: 1px solid #dcdcdc;
+}
+
+.button-container button:hover {
+    background-color: #f6f6f6;
+    font-weight: bold;
+    border: 1px solid #4f5564;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* 表单样式 */
+#collectForm {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#collectForm label {
+    font-size: 16px;
+    color: #555;
+}
+
+#collectForm input,
+#collectForm select,
+#collectForm textarea {
+    padding: 20px 8px;
+    font-size: 14px;
+    width: 100%;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+#collectForm textarea {
+    resize: none;
+}
+
+.note {
+    font-size: 12px;
+    margin-top: 10px;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+/* 文件夹路径显示区域 */
+#folderPathDisplay {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#folderPath {
+    font-size: 14px;
+    color: #555;
+    word-wrap: break-word;
+    margin-bottom: 0;
+}
+
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.button-container button {
+    font-size: 14px !important;
+    color: #4f5564;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    transition: background-color 0.3s ease;
+}
+
+.button-container button:hover {
+    background-color: #f6f6f6;
+    border: 1px solid #4f5564;
+
+}
+
+
+
+.file-list ul {
+    list-style-type: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    /* 将文件列表分为四列 */
+    gap: 20px;
+    margin: 0;
+}
+
+.file-list li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    max-width: 200px;
+    /* 限制列表项的最大宽度 */
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.file-list img {
+    width: 100%;
+    max-width: 180px;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+
+.file-list span {
+    font-size: 12px;
+    color: #555;
+    word-wrap: break-word;
+    /* 允许文本换行 */
+    word-break: break-all;
+    /* 长单词会被强制换行 */
+    text-align: left;
+    width: 93%;
+    box-sizing: border-box;
+}
+
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.progress-bar {
+    width: 100%;
+    background-color: #f3f3f3;
+    border-radius: 5px;
+    height: 5px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #4f5564;
+    width: 0;
+    transition: width 0.3s ease;
+}
+
+#currentFile {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #555;
+}
+
+/* 包裹文件名和删除按钮的容器 */
+.file-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* 删除按钮样式 */
+.delete-btn {
+    font-size: 12px;
+    color: red;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-weight: bold;
+    padding: 0;
+    margin: 0 0 0 5px;
+}
+
+.delete-btn:hover {
+    color: darkred;
+    background: none;
+
+}
+
+/* 预览图剔除提醒样式 */
+#previewNotice,
+#nonMediaNotice,
+#fileGroupNotice,
+#duplicateFileNotice {
+    margin-top: 0px;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+
+
+#previewNotice p,
+#nonMediaNotice p,
+#fileGroupNotice p,
+#duplicateFileNotice p {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 0;
+}
+
+/* 针对特定区域的按钮样式，避免全局样式冲突 */
+#previewNotice button,
+#nonMediaNotice button,
+#fileGroupNotice button,
+#duplicateFileNotice button,
+#folderPathDisplay button,
+#submitCollectBtn {
+    font-size: 14px !important;
+    color: #4f5564;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    transition: background-color 0.3s ease;
+}
+
+#previewNotice button:hover,
+#nonMediaNotice button:hover,
+#fileGroupNotice button:hover,
+#duplicateFileNotice button:hover,
+#folderPathDisplay button:hover,
+#submitCollectBtn:hover {
+    background-color: #f6f6f6;
+    border: 1px solid #4f5564;
+}
+
+/* 针对提交按钮单独设置 padding */
+#submitCollectBtn {
+    padding: 5px 10px;
+}
+
+.file-list-header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+
+}
+
+.rename-files-btn {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 20px;
+}
+
+.rename-files-btn:hover {
+    background-color: #cc001f;
+}
+
+.rename-controls {
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    /* 确保元素不换行 */
+}
+
+.rename-files-btn,
+.confirm-rename-btn {
+    flex-shrink: 0;
+    /* 防止按钮缩小 */
+    white-space: nowrap;
+    /* 防止文字换行 */
+}
+
+.rename-input,
+.confirm-rename-btn,
+.cancel-rename-btn {
+    display: none;
+    /* 初始状态下隐藏 */
+}
+
+.rename-input {
+    width: 200px;
+    display: none;
+    /* 默认隐藏，点击“批量重命名”按钮后显示 */
+}
+
+.confirm-rename-btn,
+.cancel-rename-btn {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+
+}
+
+.confirm-rename-btn:hover,
+.cancel-rename-btn:hover {
+    background-color: #cc001f;
+}
+
+
+.notice i {
+    color: #ff6b6b;
+    /* 设置图标颜色为红色 */
+    margin-right: 8px;
+    /* 增加图标与文本之间的间距 */
+    font-size: 14px;
+    /* 设置图标大小 */
+    vertical-align: middle;
+    /* 确保图标和文本垂直居中 */
+}
+
+.albumSelect-list {
+    margin: 20px 0;
+}
+
+
+.my-gallery-container,
+.album-container,
+.favorite-container,
+.liked-container,
+.search-results-container {
+    border: 1px solid #e0e0e0;
+    display: flex;
+    padding: 20px;
+    border-radius: 8px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-results-container p {
+    margin: 0;
+    font-size: 14px;
+
+}
+
+.search-results-container h2 {
+    margin: 0;
+    font-size: 24px;
+
+}
+
+.my-gallery-container p {
+    margin: 0;
+    font-size: 14px;
+
+}
+
+.my-gallery-container h2 {
+    margin: 0;
+    font-size: 24px;
+
+}
+
+.favorite-container p {
+    margin: 0;
+    font-size: 14px;
+
+}
+
+.favorite-container h2 {
+    margin: 0;
+    font-size: 24px;
+
+}
+
+.liked-container h2 {
+    margin: 0;
+    font-size: 24px;
+
+}
+
+.liked-container p {
+    margin: 0;
+    font-size: 14px;
+
+}
+
+
+.header-container {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.header-container h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+#generate-thumbnails,
+#generate-auto-tags {
+    padding: 10px 15px !important;
+    font-size: 14px !important;
+    border-radius: 50px !important;
+    border: none !important;
+    background-color: #e60023 !important;
+    color: white !important;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-left: 10px !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+#generate-thumbnails:hover,
+#generate-auto-tags:hover {
+    background-color: #d50019 !important;
+}
+
+/* 自动标签结果区域样式 */
+.auto-tagger-results-container {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.meta-container {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    font-size: 14px;
+    color: #666;
+}
+
+.trash {
+    border-radius: 50px;
+    background-color: #ebebeb;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    font-size: 14px;
+    color: #9b9b9b;
+    margin-right: 10px;
+    transition: width 0.8s !important;
+}
+
+.dhs-album-details {
+    margin: 0 auto;
+}
+
+.dhs-album-details h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.dhs-album-details p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 0;
+}
+
+.dhs-album-images-grid {
+    margin-top: 20px;
+}
+
+.dhs-album-image-item {
+    margin-bottom: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+    transition: box-shadow 0.3s;
+    width: calc(25% - 15px);
+    /* 假设每行4个项目 */
+}
+
+.dhs-album-image-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.image-checkbox {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.image-checkbox.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+
+
+#deselect-all,
+#select-all {
+    font-size: 14px;
+    color: #9b9b9b;
+    cursor: pointer;
+}
+
+#deselect-all,
+#select-all {
+    padding: 10px 10px;
+    border-radius: 0;
+    background-color: transparent;
+}
+
+#delete-check {
+    padding: 10px 10px;
+    font-size: 14px;
+    border-radius: 50px;
+    border: none;
+    background-color: #e60023;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#delete-check:hover {
+    background-color: #a8001a;
+}
+
+#delete-images {
+    padding: 10px 10px;
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+    border-radius: 50px;
+    border: none;
+    background-color: #e60023;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.dhs-album-image-item:hover {
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.dhs-album-image-item img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.dhs-album-image-item:hover img {
+    transform: scale(1.1);
+}
+
+/* 图标容器 */
+.dhs-image-icons {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: flex;
+    gap: 5px;
+    z-index: 10;
+    align-items: center;
+}
+
+/* 图标样式 */
+.dhs-image-icons a {
+    color: #fff;
+    background-color: rgba(195, 195, 195, 0.3);
+
+    padding: 5px;
+    border-radius: 50%;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dhs-image-icons a:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.dhs-image-icons i {
+    font-size: 12px;
+    /* 图标颜色 */
+
+}
+
+/* 进度条容器 */
+.progress-bar-container {
+    width: 100%;
+    height: 5px;
+    background-color: #e0e0e0;
+    margin-top: 5px;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* 进度条本体 */
+.progress-bar {
+    width: 0;
+    height: 100%;
+    background-color: #4caf50;
+    transition: width 0.4s ease;
+}
+
+.selection-actions {
+    display: none;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.selection-actions.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.load-more-container {
+    text-align: center;
+    margin: 20px 0 50px 0;
+}
+
+.load-more-container button {
+    font-size: 16px !important;
+    color: #4f5564;
+    padding: 15px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    transition: border 0.6s, background-color 0.3s ease;
+}
+
+.load-more-container button:hover {
+    background-color: #f6f6f6;
+    border: 1px solid #4f5564;
+}
+
+
+.favorite-select-container {
+    position: relative;
+    display: none;
+    /* 默认隐藏 */
+}
+
+.favorite-dropdown-btn {
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 黑色，80%不透明度 */
+    color: white;
+    padding: 8px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    min-width: 160px;
+}
+
+.favorite-dropdown-btn:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+
+
+}
+
+.like-icon {
+    color: #fff !important;
+    /* 默认颜色 */
+    cursor: pointer;
+}
+
+.like-icon.liked {
+    color: red !important;
+    /* 已喜欢的红色 */
+}
+
+.favorite-dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
+    z-index: 1;
+    border-radius: 0 0 4px 4px;
+    overflow-y: auto;
+    max-height: 160px;
+    padding: 10px;
+}
+
+.favorite-select-container:hover .favorite-dropdown-content {
+    display: block;
+}
+
+.favorite-dropdown-content label {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    margin-bottom: 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.favorite-dropdown-content label:hover {
+    background-color: #f1f1f1;
+}
+
+.favorite-dropdown-content input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+}
+
+
+
+.create-favorite-option {
+    font-weight: bold;
+    margin-bottom: 10px;
+}

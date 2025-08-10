@@ -1,0 +1,211 @@
+/* DHS图库相册样式 */
+
+.dhs-tuku-albums {
+    max-width: 100%;
+    margin: 0 0 60px 0;
+}
+
+.dhs-tuku-albums .dhs-album-item .dhs-album-meta {
+    color: #fff !important;
+}
+
+.dhs-album-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.dhs-album-item {
+    position: relative;
+    border-radius: 6px;
+    padding: 0;
+    text-align: center;
+    background-color: #f0f0f0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.dhs-album-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.dhs-album-item img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 11.5;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+    transform-origin: bottom;
+}
+
+.dhs-album-item:hover img {
+    transform: scale(1.1);
+}
+
+.dhs-album-info {
+    margin-top: 10px;
+}
+
+/* 分类名称样式 */
+.dhs-album-category {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+    transition: background-color 0.4s ease;
+}
+
+.dhs-album-category:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.dhs-album-category a {
+    color: white;
+    text-decoration: none;
+}
+
+/* 相册名称样式 */
+.dhs-album-info h3 {
+    color: #fff;
+    margin-left: 10px;
+    margin-top: 10px;
+    margin-bottom: 0;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: left;
+    transition: color 0.2s ease;
+}
+
+/* 作者和日期样式 */
+.dhs-album-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #fff;
+    margin: 5px 0 5px 10px;
+}
+
+.dhs-album-meta p {
+    margin: 0;
+    text-align: left;
+}
+
+/* 悬停时相册名称变色 */
+.dhs-album-item:hover .dhs-album-info h3 {
+    color: #0073aa;
+}
+
+/* 编辑和删除菜单样式 */
+.dhs-album-options {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.dhs-album-options:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    transform: scale(1.1);
+}
+
+.dhs-album-options i {
+    line-height: 1;
+    display: block;
+}
+
+.dhs-album-options .options-menu {
+    width: 70px;
+    display: none;
+    position: absolute;
+    top: 32px;
+    right: -5px;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
+    z-index: 20;
+    overflow: hidden;
+}
+
+.dhs-album-options .options-menu a {
+    font-size: 11px;
+    font-weight: 500;
+    display: block;
+    padding: 8px 10px;
+    color: #333;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+    border: none;
+}
+
+.dhs-album-options .options-menu a:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.dhs-album-options .options-menu a.delete-option:hover {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+/* 移除悬停显示菜单，改为点击控制 */
+.dhs-album-options .options-menu.show {
+    display: block;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .dhs-album-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+
+    .dhs-album-item {
+        border-radius: 4px;
+    }
+
+    .dhs-album-info h3 {
+        font-size: 12px;
+        margin-top: 8px;
+    }
+
+    .dhs-album-meta {
+        font-size: 10px;
+        margin: 3px 0 3px 8px;
+    }
+
+    .dhs-album-category {
+        font-size: 10px;
+        padding: 1px 3px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dhs-album-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+    }
+
+    .dhs-tuku-albums {
+        margin: 0 0 40px 0;
+    }
+}

@@ -1,0 +1,237 @@
+/* 自动标签功能样式 */
+
+.auto-tagger-container {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.auto-tagger-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.auto-tagger-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.auto-tagger-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* 原来的按钮样式已移到 modal-styles.css 中统一管理 */
+
+/* 确保自动标签按钮不受其他样式影响 */
+.auto-tag-batch {
+    all: unset !important;
+}
+
+button.auto-tag-batch,
+#generate-auto-tags.auto-tag-batch {
+    padding: 10px 15px !important;
+    font-size: 14px !important;
+    border-radius: 50px !important;
+    border: none !important;
+    background-color: #e60023 !important;
+    color: white !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
+    margin-left: 20px !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    display: inline-block !important;
+    line-height: 1em !important;
+}
+
+.auto-tag-progress {
+    margin-top: 15px;
+    display: none;
+}
+
+.progress-bar-container {
+    background: #e0e0e0;
+    border-radius: 10px;
+    height: 20px;
+    margin: 10px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #e60023, #ff1744);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.auto-tag-results {
+    margin-top: 15px;
+    display: none;
+}
+
+.generated-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.generated-tag {
+    background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+    color: #333;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid #ddd;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    animation: fadeInUp 0.3s ease;
+}
+
+.generated-tag.new-tag {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+    border-color: #fdcb6e;
+}
+
+.generated-tag i {
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+.auto-tag-stats {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: #667eea;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.auto-tag-errors {
+    background: #fff5f5;
+    border: 1px solid #feb2b2;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 15px;
+    display: none;
+}
+
+.auto-tag-errors h4 {
+    color: #e53e3e;
+    margin: 0 0 10px 0;
+    font-size: 14px;
+}
+
+.error-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.error-list li {
+    background: white;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 4px;
+    border-left: 3px solid #e53e3e;
+    font-size: 13px;
+    color: #333;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .auto-tagger-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+
+    .auto-tagger-actions {
+        justify-content: center;
+    }
+
+    .auto-tag-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 暗色主题支持 */
+@media (prefers-color-scheme: dark) {
+    .auto-tagger-container {
+        background: #2d3748;
+        border-color: #4a5568;
+    }
+
+    .auto-tagger-title {
+        color: #e2e8f0;
+    }
+
+    .auto-tag-stats {
+        background: #1a202c;
+        border-color: #4a5568;
+    }
+
+    .stat-label {
+        color: #a0aec0;
+    }
+
+    .generated-tag {
+        color: #2d3748;
+    }
+
+    .error-list li {
+        background: #1a202c;
+        color: #e2e8f0;
+    }
+}
