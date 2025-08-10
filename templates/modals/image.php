@@ -451,7 +451,7 @@
             </div>
 
             <?php if (is_user_logged_in()): ?>
-            <!-- 文件选择器，用于关联其他文件 -->
+            <!-- 文件选择器，用于关联其他文件（仅限图片上传者） -->
             <input type="file" id="fileSelector" style="display: none;" multiple />
             <?php endif; ?>
         </div>
@@ -494,6 +494,9 @@
 
                         // 获取 albumId 用于后续关联文件
                         window.albumId = imageData.album_id; // 确保 albumId 被正确赋值
+                        
+                        // 获取图片上传者ID用于权限控制
+                        window.imageUploaderId = imageData.uploader_id || null;
 
                         // 更新图片和信息
                         document.getElementById('fileId').textContent = imageData.image_id || 'N/A';
@@ -669,8 +672,9 @@
                         const tagsWrapper = document.createElement('div');
                         tagsWrapper.setAttribute('id', 'tags-wrapper');
                         tagsWrapper.innerHTML = `<strong>标签:</strong> `;
-                        tagsWrapper.appendChild(tagsContainer);
                         tagsWrapper.appendChild(outerContainer);
+                        tagsWrapper.appendChild(document.createElement('br')); // 添加换行
+                        tagsWrapper.appendChild(tagsContainer);
 
                         // 将标签包装器插入到页面中合适的位置
                         const detailsSection = document.querySelector('.details-section .file-info');
@@ -703,14 +707,18 @@
                             }
                         });
 
-                        // 插入 "关联其他文件" 按钮（仅限登录用户）
+                        // 插入 "关联其他文件" 按钮（仅限图片上传者）
                         <?php if (is_user_logged_in()): ?>
-                        const associateFileButton = document.createElement('button');
-                        associateFileButton.textContent = "添加新的";
-                        associateFileButton.onclick = () => {
-                            document.getElementById('fileSelector').click(); // 打开文件选择窗口
-                        };
-                        fileButtonsContainer.appendChild(associateFileButton);
+                        // 检查当前用户是否是图片的上传者
+                        const currentUserId = <?php echo get_current_user_id(); ?>;
+                        if (imageData.uploader_id && currentUserId === parseInt(imageData.uploader_id)) {
+                            const associateFileButton = document.createElement('button');
+                            associateFileButton.textContent = "添加新的";
+                            associateFileButton.onclick = () => {
+                                document.getElementById('fileSelector').click(); // 打开文件选择窗口
+                            };
+                            fileButtonsContainer.appendChild(associateFileButton);
+                        }
                         <?php endif; ?>
 
                         // 只有登录用户才获取并显示用户收藏
@@ -1106,51 +1114,55 @@
         }
 
 
-        // 监听文件选择器的变化（仅限登录用户）
+        // 监听文件选择器的变化（仅限图片上传者）
         <?php if (is_user_logged_in()): ?>
-        document.getElementById('fileSelector').addEventListener('change', function(event) {
-            const files = event.target.files;
-            if (files.length > 0) {
-                const file = files[0];
+        // 检查当前用户是否是图片的上传者
+        const currentUserId = <?php echo get_current_user_id(); ?>;
+        const imageUploaderId = window.imageUploaderId; // 从全局变量获取图片上传者ID
+        
+        if (imageUploaderId && currentUserId === parseInt(imageUploaderId)) {
+            document.getElementById('fileSelector').addEventListener('change', function(event) {
+                const files = event.target.files;
+                if (files.length > 0) {
+                    const file = files[0];
 
+                    // 调用检查文件是否存在的函数
+                    checkFileExists(file.name).then(fileExists => {
+                        console.log('文件是否存在:', fileExists); // 调试：输出文件是否存在的结果
 
+                        if (fileExists) {
+                            // 提示用户选择操作
+                            const userChoice = prompt(`文件 ${file.name} 已经存在。你希望？\n1. 覆盖文件\n2. 重命名文件\n3. 取消上传`, '1');
 
-                // 调用检查文件是否存在的函数
-                checkFileExists(file.name).then(fileExists => {
-                    console.log('文件是否存在:', fileExists); // 调试：输出文件是否存在的结果
+                            if (userChoice === '3') {
+                                return; // 用户选择取消上传，终止逻辑
+                            }
 
-                    if (fileExists) {
-                        // 提示用户选择操作
-                        const userChoice = prompt(`文件 ${file.name} 已经存在。你希望？\n1. 覆盖文件\n2. 重命名文件\n3. 取消上传`, '1');
+                            if (userChoice === '2') {
+                                const newFileName = generateNewFileName(file.name);
+                                uploadFile(newFileName, file); // 使用新文件名上传
+                                return;
+                            }
 
-                        if (userChoice === '3') {
-                            return; // 用户选择取消上传，终止逻辑
+                            if (userChoice === '1') {
+                                uploadFile(file.name, file); // 覆盖原文件上传
+                                return;
+                            }
+                        } else {
+                            // 文件不存在，直接上传
+                            const confirmation = confirm(`你确定要关联 ${file.name} 文件吗？`);
+                            if (!confirmation) {
+                                return; // 用户取消关联
+                            }
+
+                            uploadFile(file.name, file); // 上传文件
                         }
-
-                        if (userChoice === '2') {
-                            const newFileName = generateNewFileName(file.name);
-                            uploadFile(newFileName, file); // 使用新文件名上传
-                            return;
-                        }
-
-                        if (userChoice === '1') {
-                            uploadFile(file.name, file); // 覆盖原文件上传
-                            return;
-                        }
-                    } else {
-                        // 文件不存在，直接上传
-                        const confirmation = confirm(`你确定要关联 ${file.name} 文件吗？`);
-                        if (!confirmation) {
-                            return; // 用户取消关联
-                        }
-
-                        uploadFile(file.name, file); // 上传文件
-                    }
-                }).catch(error => {
-                    console.error('检查文件是否存在时出错:', error);
-                });
-            }
-        });
+                    }).catch(error => {
+                        console.error('检查文件是否存在时出错:', error);
+                    });
+                }
+            });
+        }
         <?php endif; ?>
 
         // 生成重命名文件的新文件名
