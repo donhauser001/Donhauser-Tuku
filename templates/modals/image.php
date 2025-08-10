@@ -403,16 +403,16 @@
             <?php endif; ?>
             
             <?php if (is_user_logged_in()): ?>
-            <!-- 设为素材集封面按钮 -->
-            <div class="fengmian-buttons tooltip">
+            <!-- 设为素材集封面按钮（仅限素材作者） -->
+            <div class="fengmian-buttons tooltip" id="setCoverButton" style="display: none;">
                 <button>
                     <i class="fas fa-image"></i>
                 </button>
                 <span class="tooltiptext">设为素材集封面</span>
             </div>
 
-            <!-- 上传预览图按钮 -->
-            <div class="upload-button tooltip">
+            <!-- 上传预览图按钮（仅限素材作者） -->
+            <div class="upload-button tooltip" id="updatePreviewButton" style="display: none;">
                 <label for="uploadPreview">
                     <i class="fas fa-upload"></i>
                 </label>
@@ -420,8 +420,8 @@
                 <input type="file" id="uploadPreview" accept="image/*" style="display: none;" />
             </div>
 
-            <!-- 删除按钮 -->
-            <div class="delete-button tooltip">
+            <!-- 删除按钮（仅限素材作者） -->
+            <div class="delete-button tooltip" id="deleteButtonContainer" style="display: none;">
                 <button id="deleteButton">
                     <i class="fas fa-trash-alt"></i>
                 </button>
@@ -512,6 +512,20 @@
                         if (deleteButton) {
                             deleteButton.setAttribute('data-album-id', window.albumId); // 使用 window.albumId
                             deleteButton.setAttribute('data-file-name', imageData.file_name);
+                        }
+                        
+                        // 根据权限显示/隐藏管理按钮（仅限素材作者）
+                        const currentUserId = <?php echo get_current_user_id(); ?>;
+                        if (imageData.uploader_id && currentUserId === parseInt(imageData.uploader_id)) {
+                            // 显示所有管理按钮
+                            document.getElementById('setCoverButton').style.display = 'block';
+                            document.getElementById('updatePreviewButton').style.display = 'block';
+                            document.getElementById('deleteButtonContainer').style.display = 'block';
+                        } else {
+                            // 隐藏所有管理按钮
+                            document.getElementById('setCoverButton').style.display = 'none';
+                            document.getElementById('updatePreviewButton').style.display = 'none';
+                            document.getElementById('deleteButtonContainer').style.display = 'none';
                         }
                         <?php endif; ?>
 
@@ -736,6 +750,13 @@
         }
 
         function setAsCover() {
+            // 权限检查：只有素材作者才能设置封面
+            const currentUserId = <?php echo get_current_user_id(); ?>;
+            if (!window.imageUploaderId || currentUserId !== parseInt(window.imageUploaderId)) {
+                alert('权限不足：只有素材作者才能设置封面');
+                return;
+            }
+            
             // 从页面的文件名字段提取文件名
             let fileName = document.getElementById('fileName').textContent.trim();
 
@@ -1251,6 +1272,13 @@
         // 删除按钮事件监听器（仅限登录用户）
         <?php if (is_user_logged_in()): ?>
         document.getElementById('deleteButton').addEventListener('click', function() {
+            // 权限检查：只有素材作者才能删除素材
+            const currentUserId = <?php echo get_current_user_id(); ?>;
+            if (!window.imageUploaderId || currentUserId !== parseInt(window.imageUploaderId)) {
+                alert('权限不足：只有素材作者才能删除素材');
+                return;
+            }
+            
             const albumId = this.getAttribute('data-album-id');
             const imageName = this.getAttribute('data-file-name');
 
@@ -1311,6 +1339,14 @@
         // 上传预览图事件监听器（仅限登录用户）
         <?php if (is_user_logged_in()): ?>
         document.getElementById('uploadPreview').addEventListener('change', function(event) {
+            // 权限检查：只有素材作者才能更新预览图
+            const currentUserId = <?php echo get_current_user_id(); ?>;
+            if (!window.imageUploaderId || currentUserId !== parseInt(window.imageUploaderId)) {
+                alert('权限不足：只有素材作者才能更新预览图');
+                event.target.value = ''; // 清空文件选择
+                return;
+            }
+            
             const file = event.target.files[0];
             if (file) {
                 const fileName = document.getElementById('fileName').textContent.trim();
